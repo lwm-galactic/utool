@@ -32,6 +32,7 @@ func (nfs *NamedFlagSets) FlagSet(name string) *pflag.FlagSet {
 // PrintSections prints the given names flag sets in sections, with the maximal given column number.
 // If cols is zero, lines are not wrapped.
 func PrintSections(w io.Writer, fss NamedFlagSets, cols int) {
+
 	for _, name := range fss.Order {
 		fs := fss.FlagSets[name]
 		if !fs.HasFlags() {

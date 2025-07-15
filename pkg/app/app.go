@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/lwm-galactic/utool/pkg/cli"
+	"github.com/lwm-galactic/utool/pkg/log"
 
-	"github.com/lwm-galactic/logger"
 	"github.com/lwm-galactic/tools/term"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -152,27 +152,24 @@ func (a *App) buildCommand() {
 			cmd.AddCommand(command.cobraCommand())
 		}
 		// to add app help flag to app.
-		cmd.SetHelpCommand(helpCommand(FormatBaseName(a.commandName)))
+		// cmd.SetHelpCommand(helpCommand(FormatBaseName(a.commandName)))
 		cmd.AddCommand(addListCmd())
 	}
 
 	if a.runFunc != nil {
 		cmd.RunE = a.runCommand
 	}
+
 	var namedFlagSets cli.NamedFlagSets
 	if a.options != nil {
 		namedFlagSets = a.options.Flags()
-		fs := cmd.Flags()
-		for _, f := range namedFlagSets.FlagSets {
-			fs.AddFlagSet(f)
-		}
 	}
 
 	// add config flag
 	if !a.noConfig {
 		addConfigFlag(a.commandName, namedFlagSets.FlagSet("global"))
 	}
-	cli.AddGlobalFlags(namedFlagSets.FlagSet("global"), cmd.Name())
+	// cli.AddGlobalFlags(namedFlagSets.FlagSet("global"), cmd.Name())
 	cmd.Flags().AddFlagSet(namedFlagSets.FlagSet("global"))
 
 	addCmdTemplate(&cmd, namedFlagSets)
@@ -201,10 +198,10 @@ func (a *App) runCommand(cmd *cobra.Command, args []string) error {
 		}
 	}
 	if !a.silence {
-		logger.Infof("%v Starting %s ...", progressMessage, a.name)
+		log.Infof("%v Starting %s ...", progressMessage, a.name)
 
 		if !a.noConfig {
-			logger.Infof("%v Config file used: `%s`", progressMessage, viper.ConfigFileUsed())
+			log.Infof("%v Config file used: `%s`", progressMessage, viper.ConfigFileUsed())
 		}
 	}
 	if a.options != nil {
@@ -231,7 +228,7 @@ func (a *App) applyOptionRules() error {
 	}
 
 	if printableOptions, ok := a.options.(PrintableOptions); ok && !a.silence {
-		logger.Infof("%v Config: `%s`", progressMessage, printableOptions.String())
+		log.Infof("%v Config: `%s`", progressMessage, printableOptions.String())
 	}
 
 	return nil
@@ -264,6 +261,7 @@ func addListCmd() *cobra.Command {
 			for _, c := range cmd.Root().Commands() {
 				fmt.Printf(" - %s: %s\n", c.Name(), c.Short)
 			}
+			fmt.Println("To Use tool subcommands --help to show how subcommand use")
 			return nil
 		},
 	}
@@ -272,5 +270,5 @@ func addListCmd() *cobra.Command {
 // to show working dir
 func printWorkingDir() {
 	wd, _ := os.Getwd()
-	logger.Infof("%v WorkingDir: %s", progressMessage, wd)
+	log.Infof("%v WorkingDir: %s", progressMessage, wd)
 }

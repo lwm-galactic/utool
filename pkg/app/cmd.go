@@ -71,7 +71,6 @@ func (c *Command) cobraCommand() *cobra.Command {
 	}
 	cmd.SetOut(os.Stdout)
 	cmd.SetErr(os.Stderr)
-
 	cmd.Flags().SortFlags = false
 	if len(c.commands) > 0 {
 		for _, command := range c.commands {
@@ -81,14 +80,13 @@ func (c *Command) cobraCommand() *cobra.Command {
 	if c.runFunc != nil {
 		cmd.RunE = c.runCommand
 	}
+	namedFlagSets := cli.NamedFlagSets{}
 	if c.options != nil {
-		for _, f := range c.options.Flags().FlagSets {
-			cmd.Flags().AddFlagSet(f)
-		}
+		namedFlagSets = c.options.Flags()
 	}
 
 	// to add --help flag to command
-	addHelpCommandFlag(c.usage, cmd.Flags())
+	addCmdTemplate(cmd, namedFlagSets)
 
 	return cmd
 }

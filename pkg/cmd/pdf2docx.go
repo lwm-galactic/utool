@@ -109,7 +109,10 @@ func pdf2docxRun(option app.CliOptions) error {
 		}
 	}
 	if opts.File != "" {
-		pdfFiles, err = readPdfFile(opts.File)
+		if _, err := os.Stat(opts.File); os.IsNotExist(err) {
+			return fmt.Errorf("指定的文件不存在: %s", opts.File)
+		}
+		pdfFiles = append(pdfFiles, opts.File)
 	}
 
 	for _, pdfFile := range pdfFiles {
@@ -123,16 +126,18 @@ func pdf2docxRun(option app.CliOptions) error {
 
 		err := cmd.Run()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error executing command for %s: %v\n", pdfFile, err)
-			return err
+			fmt.Fprintf(os.Stderr, "[失败] 转换失败: %s: %v\n", pdfFile, err)
+			continue
 		}
+		fmt.Printf("[成功] 转换完成: %s\n", pdfFile)
 	}
 
 	return nil
 }
 
 func getFileName(fileName string) string {
-	return fmt.Sprintf("%s.docx", strings.TrimSuffix(filepath.Base(fileName), ".pdf"))
+	base := strings.TrimSuffix(filepath.Base(fileName), ".pdf")
+	return base + ".docx"
 }
 
 func readPdfFile(inputDir string) ([]string, error) {

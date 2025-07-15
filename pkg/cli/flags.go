@@ -2,7 +2,8 @@ package cli
 
 import (
 	"flag"
-	"github.com/lwm-galactic/logger"
+	"github.com/lwm-galactic/utool/pkg/log"
+
 	"github.com/spf13/pflag"
 	"strings"
 )
@@ -19,7 +20,7 @@ func WordSepNormalizeFunc(f *pflag.FlagSet, name string) pflag.NormalizedName {
 func WarnWordSepNormalizeFunc(f *pflag.FlagSet, name string) pflag.NormalizedName {
 	if strings.Contains(name, "_") {
 		newName := strings.ReplaceAll(name, "_", "-")
-		logger.Warnf("%s is DEPRECATED and will be removed in a future version. Use %s instead.", name, newName)
+		log.Warnf("%s is DEPRECATED and will be removed in a future version. Use %s instead.", name, newName)
 
 		return pflag.NormalizedName(newName)
 	}
@@ -35,6 +36,6 @@ func InitFlags(flags *pflag.FlagSet) {
 // PrintFlags logs the flags in the flagset.
 func PrintFlags(flags *pflag.FlagSet) {
 	flags.VisitAll(func(flag *pflag.Flag) {
-		logger.Debugf("FLAG: --%s=%q", flag.Name, flag.Value)
+		log.Debugf("FLAG: --%s=%q", flag.Name, flag.Value)
 	})
 }
