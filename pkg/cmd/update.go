@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/lwm-galactic/utool/pkg/app"
+	"github.com/lwm-galactic/utool/pkg/log"
 )
 
 func NewUpdateCommand() *app.Command {
@@ -10,7 +10,8 @@ func NewUpdateCommand() *app.Command {
 }
 
 func run(option app.CliOptions) error {
-	fmt.Println("update called")
+	log.Info("update called")
 
+	log.Info("update called success")
 	return nil
 }

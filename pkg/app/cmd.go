@@ -95,14 +95,17 @@ func (c *Command) cobraCommand() *cobra.Command {
 
 func (c *Command) runCommand(cmd *cobra.Command, args []string) error {
 	cli.InitFlags(cmd.Flags())
-	err := viper.BindPFlags(cmd.Flags())
-	if err != nil {
-		return err
+	if c.options != nil {
+		err := viper.BindPFlags(cmd.Flags())
+		if err != nil {
+			return err
+		}
+		err = viper.Unmarshal(c.options)
+		if err != nil {
+			return err
+		}
 	}
-	err = viper.Unmarshal(c.options)
-	if err != nil {
-		return err
-	}
+
 	if c.runFunc != nil {
 		if err := c.runFunc(c.options); err != nil {
 			fmt.Printf("%v %v\n", color.RedString("Error:"), err)

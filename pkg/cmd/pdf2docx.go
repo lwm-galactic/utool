@@ -14,10 +14,16 @@ import (
 
 const BaseCommandName = "pdf2docx"
 
+const (
+	Convert = "convert"
+	GUI     = "gui"
+)
+
 type Pdf2DocxOptions struct {
 	InputDir  string `mapstructure:"input-dir"`
 	OutputDir string `mapstructure:"output-dir"`
 	File      string `mapstructure:"file"`
+	GUI       bool   `mapstructure:"gui"`
 }
 
 func (o *Pdf2DocxOptions) Validate() []error {
@@ -46,6 +52,7 @@ func NewPdf2DocxOptions() *Pdf2DocxOptions {
 		InputDir:  ".",
 		OutputDir: ".",
 		File:      "",
+		GUI:       false,
 	}
 }
 
@@ -63,6 +70,8 @@ func (o *Pdf2DocxOptions) AddFlags(fs *pflag.FlagSet) {
 		"设置 pdf2docx 转换 docx文件后 所在的文件夹")
 
 	fs.StringVar(&o.File, "file", o.File, "指定一个pdf文件转换成docx")
+
+	fs.BoolVar(&o.GUI, "gui", o.GUI, "是否使用图形化界面操作 true or false")
 }
 
 func (o *Pdf2DocxOptions) Flags() (fss cli.NamedFlagSets) {
@@ -80,6 +89,17 @@ func pdf2docxRun(option app.CliOptions) error {
 		return fmt.Errorf("pdf2docxRun option is invalid")
 	}
 
+	if opts.GUI {
+		cmd := exec.Command(BaseCommandName, GUI)
+		err := cmd.Run()
+		if err != nil {
+			fmt.Printf("pdf2docxRun err: %v\n", err)
+			return err
+		}
+
+		return nil
+	}
+
 	var pdfFiles []string
 	var err error
 	if opts.InputDir != "" {
@@ -93,7 +113,7 @@ func pdf2docxRun(option app.CliOptions) error {
 	}
 
 	for _, pdfFile := range pdfFiles {
-		cmd := exec.Command("pdf2docx", "convert", pdfFile,
+		cmd := exec.Command(BaseCommandName, Convert, pdfFile,
 			filepath.Join(opts.OutputDir, getFileName(pdfFile)))
 		// 设置 stdout 和 stderr 的管道
 		cmd.Stdout = os.Stdout // 直接输出到控制台
