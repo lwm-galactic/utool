@@ -3,7 +3,8 @@ package app
 import (
 	"fmt"
 	"github.com/fatih/color"
-	"github.com/lwm-galactic/app-cli/cli"
+	"github.com/lwm-galactic/utool/pkg/cli"
+
 	"github.com/lwm-galactic/logger"
 	"github.com/lwm-galactic/tools/term"
 	"github.com/spf13/cobra"
@@ -39,7 +40,7 @@ type App struct {
 }
 
 // RunFunc defines the application's startup callback function.
-type RunFunc func(basename string) error
+type RunFunc func(option CliOptions) error
 
 // Option defines optional parameters for initializing the application structure.
 type Option func(*App)
@@ -87,6 +88,12 @@ func WithValidArgs(args cobra.PositionalArgs) Option {
 	}
 }
 
+func WithCommands(cmds ...*Command) Option {
+	return func(a *App) {
+		a.commands = append(a.commands, cmds...)
+	}
+}
+
 // WithDefaultValidArgs set default validation function to valid non-flag arguments.
 func WithDefaultValidArgs() Option {
 	return func(a *App) {
@@ -118,6 +125,9 @@ func NewApp(name string, commandName string, opts ...Option) *App {
 
 	return a
 }
+func (a *App) Build() {
+	a.buildCommand()
+}
 
 func (a *App) buildCommand() {
 	cmd := cobra.Command{
@@ -143,6 +153,7 @@ func (a *App) buildCommand() {
 		}
 		// to add app help flag to app.
 		cmd.SetHelpCommand(helpCommand(FormatBaseName(a.commandName)))
+		cmd.AddCommand(addListCmd())
 	}
 
 	if a.runFunc != nil {
@@ -203,7 +214,7 @@ func (a *App) runCommand(cmd *cobra.Command, args []string) error {
 	}
 	// run application
 	if a.runFunc != nil {
-		return a.runFunc(a.name)
+		return a.runFunc(a.options)
 	}
 	return nil
 }
@@ -243,18 +254,23 @@ func addCmdTemplate(cmd *cobra.Command, namedFlagSets cli.NamedFlagSets) {
 
 }
 
+func addListCmd() *cobra.Command {
+	// 创建 list 子命令
+	return &cobra.Command{
+		Use:   "list",
+		Short: "List all available commands",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println("Available commands:")
+			for _, c := range cmd.Root().Commands() {
+				fmt.Printf(" - %s: %s\n", c.Name(), c.Short)
+			}
+			return nil
+		},
+	}
+}
+
 // to show working dir
 func printWorkingDir() {
 	wd, _ := os.Getwd()
 	logger.Infof("%v WorkingDir: %s", progressMessage, wd)
-}
-
-// AddCommand adds sub command to the application.
-func (a *App) AddCommand(cmd *Command) {
-	a.commands = append(a.commands, cmd)
-}
-
-// AddCommands adds multiple sub commands to the application.
-func (a *App) AddCommands(cmds ...*Command) {
-	a.commands = append(a.commands, cmds...)
 }

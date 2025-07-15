@@ -3,7 +3,9 @@ package app
 import (
 	"fmt"
 	"github.com/fatih/color"
+	"github.com/lwm-galactic/utool/pkg/cli"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"os"
 	"runtime"
 	"strings"
@@ -16,7 +18,7 @@ type Command struct {
 	desc     string
 	options  CliOptions
 	commands []*Command
-	runFunc  RunCommandFunc
+	runFunc  RunFunc
 }
 
 // NewCommand creates a new sub command instance based on the given command name and other options.
@@ -37,14 +39,17 @@ func NewCommand(usage string, desc string, opts ...CommandOption) *Command {
 type CommandOption func(*Command)
 
 // WithCommandRunFunc functional options pattern to set RunCommandFunc
-func WithCommandRunFunc(run RunCommandFunc) CommandOption {
+func WithCommandRunFunc(run RunFunc) CommandOption {
 	return func(c *Command) {
 		c.runFunc = run
 	}
 }
 
-// RunCommandFunc defines the application's command startup callback function.
-type RunCommandFunc func(args []string) error
+func WithCommandOptions(opt CliOptions) CommandOption {
+	return func(c *Command) {
+		c.options = opt
+	}
+}
 
 // FormatBaseName is formatted as an executable file name under different
 // operating systems according to the given name.
@@ -74,13 +79,12 @@ func (c *Command) cobraCommand() *cobra.Command {
 		}
 	}
 	if c.runFunc != nil {
-		cmd.Run = c.runCommand
+		cmd.RunE = c.runCommand
 	}
 	if c.options != nil {
 		for _, f := range c.options.Flags().FlagSets {
 			cmd.Flags().AddFlagSet(f)
 		}
-		// c.options.AddFlags(cmd.Flags())
 	}
 
 	// to add --help flag to command
@@ -89,11 +93,21 @@ func (c *Command) cobraCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *Command) runCommand(cmd *cobra.Command, args []string) {
+func (c *Command) runCommand(cmd *cobra.Command, args []string) error {
+	cli.InitFlags(cmd.Flags())
+	err := viper.BindPFlags(cmd.Flags())
+	if err != nil {
+		return err
+	}
+	err = viper.Unmarshal(c.options)
+	if err != nil {
+		return err
+	}
 	if c.runFunc != nil {
-		if err := c.runFunc(args); err != nil {
+		if err := c.runFunc(c.options); err != nil {
 			fmt.Printf("%v %v\n", color.RedString("Error:"), err)
 			os.Exit(1)
 		}
 	}
+	return nil
 }

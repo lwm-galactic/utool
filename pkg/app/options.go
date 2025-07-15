@@ -1,6 +1,6 @@
 package app
 
-import "github.com/lwm-galactic/app-cli/cli"
+import "github.com/lwm-galactic/utool/pkg/cli"
 
 // CliOptions configuration options for reading parameters from the command line.
 type CliOptions interface {
