@@ -23,7 +23,6 @@ var requireList = make(map[string][]string)
 func init() {
 	// 添加需求项
 	requireList[Python] = []string{"pdf2docx", "you-get"}
-
 }
 
 func NewInitCommand() *app.Command {
@@ -38,6 +37,8 @@ func InitCommandRun(option app.CliOptions) error {
 			return initPython(list)
 		}
 	}
+
+	// log.Info("get cookie from web")
 	log.Info("init success")
 	return nil
 }
